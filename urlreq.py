@@ -45,18 +45,31 @@ class BaseHandler(webapp.RequestHandler):
     
     if (params['success']):
       result = urlfetch.fetch(params['url'], payload=params['body'], headers=params['headers'], method=params['method'], deadline=10)
-      result = self.setupResponse(result, method)
+      result = { 'status_code' : result.status_code,
+                 'headers' : result.headers,
+                 'content' : result.content }
     else:
       result = self.setupParsingErrorResponse(method, params)
     
-    self.response.set_status(result['status_code'])
-    for header in result['headers'].keys():
-      self.response.headers[header] = result['headers'][header]
-      
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
-    
-    self.response.out.write(result['content'])
-    
+    if cgi.parse_qs(self.request.query_string).has_key('debugMode'):
+      debugHeaders = {}
+      debugHeaders.update(self.response.headers)
+      if result.has_key('headers'):
+        debugHeaders.update(result['headers'])
+      debugHeaders.update( { 'Access-Control-Allow-Origin' : '*' } )
+      self.response.set_status(200)
+      self.response.headers['Content-Type'] = 'text'
+      self.response.headers['Access-Control-Allow-Origin'] = '*'
+      self.response.out.write("Response received:\n\n")
+      self.response.out.write("Status code:\n%s\n\n" % (result['status_code']))
+      self.response.out.write("Headers:\n%s\n\n" % "\n".join( item[0] + ": " + item[1] for item in debugHeaders.items()))
+      self.response.out.write("Content:\n%s" % result['content'])
+    else:
+      self.response.set_status(result['status_code'])
+      for header in result['headers'].keys():
+        self.response.headers[header] = result['headers'][header]
+      self.response.headers['Access-Control-Allow-Origin'] = '*'
+      self.response.out.write(result['content'])
     return
     
 class UrlReqHandler(BaseHandler):
@@ -84,12 +97,7 @@ class UrlReqHandler(BaseHandler):
     
     params['success'] = False
     return params
-  
-  def setupResponse(self, result, method):
-    return {'status_code' : result.status_code,
-            'headers' : result.headers,
-            'content' : result.content }
-  
+
   def setupParsingErrorResponse(self, method, params):
     result = {}
     result['status_code'] = 400
@@ -114,23 +122,6 @@ class PSHBPingHandler(BaseHandler):
     else:
       params['success'] = False
       return params
-      
-  def setupResponse(self, pingResult, method):
-    if method == "POST":
-      return {'status_code' : pingResult.status_code,
-              'headers' : pingResult.headers,
-              'content' : pingResult.content }
-    else:
-      result = {}
-      result['status_code'] = 200
-      result['headers'] = { 'Content-Type' : "text/plain" }
-      result['content'] = str(pingResult.status_code) + "\n"
-      
-      for header in pingResult.headers.keys():
-        result['content'] += header + ": " + pingResult.headers[header] + "\n"
-
-      result['content'] += "\n" + pingResult.content
-      return result
    
   def setupParsingErrorResponse(self, method, params):
     result = {}
