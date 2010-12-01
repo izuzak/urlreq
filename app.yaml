@@ -1,4 +1,4 @@
-application: pshbping
+application: urlreq
 version: 1
 runtime: python
 api_version: 1
@@ -9,4 +9,4 @@ handlers:
   upload: static/robots.txt
 
 - url: (.*)
-  script: pshbping.py
+  script: urlreq.py
