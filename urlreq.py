@@ -105,6 +105,44 @@ class UrlReqHandler(BaseHandler):
     result['content'] = "Request must include method and url string parameters."
     return result
 
+class PSHBSubHandler(BaseHandler):
+  def setupRequest(self, method):
+    qs = self.request.query_string
+    parsedQs = cgi.parse_qs(qs)
+    
+    params = {}
+    
+    if parsedQs.has_key('hub') and parsedQs.has_key('topic') and parsedQs.has_key('callback') and parsedQs.has_key('mode') and parsedQs.has_key('verify'):
+      params['success'] = True
+      params['url'] = urllib.unquote(parsedQs['hub'][0])
+      params['method'] = "POST"
+      
+      pshbParams = { "hub.mode" : parsedQs['mode'][0], "hub.topic" : parsedQs['topic'][0], "hub.callback" : urllib.unquote(parsedQs['callback'][0]), "hub.verify" : parsedQs['verify'][0]}
+      
+      if parsedQs.has_key('lease_seconds'):
+        pshbParams['hub.lease_seconds'] = parsedQs['lease_seconds'][0]
+      
+      if parsedQs.has_key('secret'):
+        pshbParams['hub.secret'] = urllib.unquote(parsedQs['secret'][0])
+      
+      if parsedQs.has_key('verify_token'):
+        pshbParams['hub.verify_token'] = urllib.unquote(parsedQs['verify_token'][0])
+      
+      params['body'] = urllib.urlencode( pshbParams, True )
+      params['headers'] = { "Content-Type" : "application/x-www-form-urlencoded" }
+      
+      return params
+    else:
+      params['success'] = False
+      return params
+   
+  def setupParsingErrorResponse(self, method, params):
+    result = {}
+    result['status_code'] = 400
+    result['headers'] = { 'Content-Type' : "text/plain" }
+    result['content'] = "Request must include hub, topic, callback, mode and verify url query string parameters and optionally lease_seconds, secret, verify_token url query parameters."
+    return result
+    
 class PSHBPingHandler(BaseHandler):
   def setupRequest(self, method):
     qs = self.request.query_string
@@ -129,17 +167,10 @@ class PSHBPingHandler(BaseHandler):
     result['headers'] = { 'Content-Type' : "text/plain" }
     result['content'] = "Request must include hub and topic url query string parameters"
     return result
-
-class PSHBSubHandler(BaseHandler):
-  pass
-#  def setupRequest(self, method):
-#  def setupResponse(self, method, pingResult):
-#  def setupParsingErrorResponse(self, method, params):
   
 class RedirectToGithubHandler(webapp.RequestHandler):
   def get(self):
     self.redirect('http://github.com/izuzak/urlreq')
-
 
 application = webapp.WSGIApplication([('/req.*', UrlReqHandler), 
                                       ('/pshbping.*', PSHBPingHandler),

@@ -14,8 +14,9 @@ API
 ---
 
 The API defines the how HTTP should be encoded in the service request URLs. Element of a HTTP request are encoded as URL query parameters:
-* HTTP method - "method" query parameter (e.g. `method=GET`)
-* destination URL - "url" query parameter (e.g. `url=http://www.google.com`)
+
+* (mandatory) HTTP method - "method" query parameter (e.g. `method=GET`)
+* (mandatory) destination URL - "url" query parameter (e.g. `url=http://www.google.com`)
 * (optional) body - "body" parameter (e.g. `body=HelloWorld`)
 * (optional multiple) HTTP headers - multiple query parameters specified as headerName=headerValue (e.g. `Content-Type=text/plain`)
 * (optional) debugMode - specifies debug mode and the response will be send as the body in text/plain (e.g. `debugMode=1`
@@ -30,17 +31,40 @@ which makes a `POST` HTTP request to the postbin url `http://www.postbin.org/zrk
 PSHBping
 --------
 
-PSHBping is an special case of the URLreq service which enables a simplified API for specifying a HTTP request for notifying an a [PubSubHubbub](http://pubsubhubbub.googlecode.com) hub. 
+PSHBping is a special case of the URLreq service which enables a simplified API for specifying a HTTP request for notifying an a [PubSubHubbub](http://pubsubhubbub.googlecode.com) hub. 
 
-The PSHBping API has the following parameters: 
-* hub URL - "hub" query parameter (e.g. `hub=http://pubsubhubbub.appspot.com`)
-* topic URLs - list of "topic" parameters (e.g. `topic=http://www.feed1.org/atom&topic=http://www.feed2.org/atom`)
+The PSHBping API has the following parameters, as defined in the [PSHB protocol spec](http://pubsubhubbub.googlecode.com/svn/trunk/pubsubhubbub-core-0.3.html): 
+
+* (mandatory) hub URL - "hub" query parameter (e.g. `hub=http://pubsubhubbub.appspot.com`)
+* (mandatory) topic URLs - list of "topic" parameters (e.g. `topic=http://www.feed1.org/atom&topic=http://www.feed2.org/atom`)
 
 The service is available at http://urlreq.appspot.com/pshbping so a full service call would look like this:
 
     http://urlreq.appspot.com/pshbping?hub=http%3A//pubsubhubbub.appspot.com&topic=http%3A//www.feed1.org/atom&topic=http%3A//www.feed2.org/atom
 
 which makes a `POST` HTTP request to `http://pubsubhubbub.appspot.com` with a HTTP header setting the `Content-Type` to `application/x-www-form-urlencoded` and has the body: `hub.mode=publish&hub.url=http%3A//www.feed1.org/atom&hub.url=http%3A//www.feed2.org/atom`.
+
+PSHBsub
+--------
+
+PSHBsub is a special case of the URLreq service which enables a simplified API for specifying a HTTP request for subscribing to and unsubscribing from a topic on a [PubSubHubbub](http://pubsubhubbub.googlecode.com) hub. 
+
+The PSHBsub API has the following parameters, as defined in the [PSHB protocol spec](http://pubsubhubbub.googlecode.com/svn/trunk/pubsubhubbub-core-0.3.html): 
+
+* (mandatory) hub URL - "hub" query parameter (e.g. `hub=http://pubsubhubbub.appspot.com`)
+* (mandatory) topic URL - "topic" query parameters (e.g. `topic=http://www.feed1.org/atom`)
+* (mandatory) callback URL - "callback" query parameters (e.g. `callback=http://www.feed1.org/atom`)
+* (mandatory) mode - "mode" query parameters (e.g. `mode=subscribe`)
+* (mandatory) verify - "verify" query parameters (e.g. `verify=async`)
+* (optional) lease_seconds - "lease_seconds" query parameters (e.g. `lease_seconds=3600`)
+* (optional) secret - "secret" query parameters (e.g. `secret=319e59f6d0a60141bad685934223bb4522e24805`)
+* (optional) verify_token - "verify_token" query parameters (e.g. `verify_token=testtoken`)
+
+The service is available at http://urlreq.appspot.com/pshbsub so a full service call would look like this:
+
+    http://urlreq.appspot.com/pshbsub?hub=http://pubsubhubbub.appspot.com&topic=http%3A//www.feed1.org/atom&callback=http%3A//www.postbin.org/11ntqo5&mode=subscribe&verify=async
+
+which makes a `POST` HTTP request to `http://pubsubhubbub.appspot.com` with a HTTP header setting the `Content-Type` to `application/x-www-form-urlencoded` and has the body: `hub.mode=subscribe&hub.topic=http%3A//www.feed1.org/atom&hub.callback=http%3A//www.postbin.org/11ntqo5&hub.verify=async`.
 
 License
 -------
