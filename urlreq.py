@@ -172,7 +172,22 @@ class RedirectToGithubHandler(webapp.RequestHandler):
   def get(self):
     self.redirect('http://github.com/izuzak/urlreq')
 
-application = webapp.WSGIApplication([('/req.*', UrlReqHandler), 
+class PSHBAppenginePingHandler(BaseHandler):
+  def setupRequest(self, method):
+    qs = self.request.query_string
+    parsedQs = cgi.parse_qs(qs)
+    
+    params = {}
+    
+    params['success'] = True
+    params['url'] = 'http://pubsubhubbub.appspot.com/'
+    params['method'] = "POST"
+    params['body'] = urllib.urlencode( { "hub.mode" : "publish", "hub.url" : urllib.unquote(self.request.path[13:])}, True )
+    params['headers'] = { "Content-Type" : "application/x-www-form-urlencoded" }
+    return params
+
+application = webapp.WSGIApplication([('/req.*', UrlReqHandler),
+                                      ('/pshbpinggae.*', PSHBAppenginePingHandler),
                                       ('/pshbping.*', PSHBPingHandler),
                                       ('/pshbsub.*', PSHBSubHandler),
                                       ('/.*', RedirectToGithubHandler)], debug=True)
