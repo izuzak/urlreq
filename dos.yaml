@@ -1,0 +1,3 @@
+blacklist:
+- subnet: 74.62.155.120
+  description: annoying spammer draining whole quota
