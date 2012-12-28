@@ -116,7 +116,7 @@ Instead of constructing URLs by hand, use the handy form below.
 <input style="width:300px; font-family:monospace" name="requestUrl" id="requestUrl" type="text" value="https://api.github.com/markdown/raw"/>
 
 </p><p><label for="requestHeaders"><b>Request headers (one per line)</b>:</label></p><p>
-<textarea id="requestHeaders" name="requestHeaders" style="width:300px" rows="5" cols="20">Content-Type: text/html</textarea>
+<textarea id="requestHeaders" name="requestHeaders" style="width:300px" rows="5" cols="20">Content-Type: text/plain</textarea>
 
 </p><p><label for="requestBody"><b>Request body</b>:</label></p><p>
 <textarea id="requestBody" name="requestBody" style="width:300px" rows="10" cols="20">**Hello** _World_!</textarea>
