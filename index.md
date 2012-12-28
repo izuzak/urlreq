@@ -90,7 +90,7 @@ Instead of constructing URLs by hand, use the handy form below.
 
     var params = {
       "method" : requestMethod,
-      "method" : requestUrl,
+      "url" : requestUrl,
       "headers" : requestHeadersObject,
       "body" : requestBody,
     };
