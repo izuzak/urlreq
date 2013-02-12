@@ -1,14 +1,13 @@
-import cgi
+import webapp2
 import urllib
+import cgi
 
-from django.utils import simplejson 
 from google.appengine.api import urlfetch
-from google.appengine.api.urlfetch import DownloadError 
-from google.appengine.ext import webapp
+from google.appengine.api.urlfetch import DownloadError
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-class BaseHandler(webapp.RequestHandler):
+class BaseHandler(webapp2.RequestHandler):
   def options(self):
     if self.request.headers.has_key('Access-Control-Request-Method'):
       self.response.set_status(200)
@@ -18,31 +17,31 @@ class BaseHandler(webapp.RequestHandler):
     else:
       self.processRequest("OPTIONS")
     return
-  
+
   def get(self):
     self.processRequest("GET")
     return
-  
+
   def put(self):
     self.processRequest("PUT")
     return
-  
+
   def post(self):
     self.processRequest("POST")
     return
-  
+
   def delete(self):
     self.processRequest("DELETE")
     return
-  
+
   def head(self):
     self.processRequest("HEAD")
     return
-    
+
   def processRequest(self, method):
     params = self.setupRequest(method)
     result = 1
-    
+
     if (params['success']):
       result = urlfetch.fetch(params['url'], payload=params['body'], headers=params['headers'], method=params['method'], deadline=10)
       result = { 'status_code' : result.status_code,
@@ -50,7 +49,7 @@ class BaseHandler(webapp.RequestHandler):
                  'content' : result.content }
     else:
       result = self.setupParsingErrorResponse(method, params)
-    
+
     if cgi.parse_qs(self.request.query_string).has_key('debugMode'):
       debugHeaders = {}
       debugHeaders.update(self.response.headers)
@@ -71,18 +70,18 @@ class BaseHandler(webapp.RequestHandler):
       self.response.headers['Access-Control-Allow-Origin'] = '*'
       self.response.out.write(result['content'])
     return
-    
+
 class UrlReqHandler(BaseHandler):
   def setupRequest(self, method):
     qs = self.request.query_string
     parsedQs = cgi.parse_qs(qs)
     params = {}
-    
+
     if parsedQs.has_key('url') and parsedQs.has_key('method'):
       params['success'] = True
       params['headers'] = {}
       params['body'] = None
-      
+
       for header in parsedQs:
          if header == "url":
            params['url'] = urllib.unquote(parsedQs['url'][0])
@@ -92,9 +91,9 @@ class UrlReqHandler(BaseHandler):
            params['body'] = urllib.unquote(parsedQs['body'][0])
          else:
            params['headers'][urllib.unquote(header)] = urllib.unquote(parsedQs[header][0])
-      
+
       return params
-    
+
     params['success'] = False
     return params
 
@@ -109,47 +108,47 @@ class PSHBSubHandler(BaseHandler):
   def setupRequest(self, method):
     qs = self.request.query_string
     parsedQs = cgi.parse_qs(qs)
-    
+
     params = {}
-    
+
     if parsedQs.has_key('hub') and parsedQs.has_key('topic') and parsedQs.has_key('callback') and parsedQs.has_key('mode') and parsedQs.has_key('verify'):
       params['success'] = True
       params['url'] = urllib.unquote(parsedQs['hub'][0])
       params['method'] = "POST"
-      
+
       pshbParams = { "hub.mode" : parsedQs['mode'][0], "hub.topic" : parsedQs['topic'][0], "hub.callback" : urllib.unquote(parsedQs['callback'][0]), "hub.verify" : parsedQs['verify'][0]}
-      
+
       if parsedQs.has_key('lease_seconds'):
         pshbParams['hub.lease_seconds'] = parsedQs['lease_seconds'][0]
-      
+
       if parsedQs.has_key('secret'):
         pshbParams['hub.secret'] = urllib.unquote(parsedQs['secret'][0])
-      
+
       if parsedQs.has_key('verify_token'):
         pshbParams['hub.verify_token'] = urllib.unquote(parsedQs['verify_token'][0])
-      
+
       params['body'] = urllib.urlencode( pshbParams, True )
       params['headers'] = { "Content-Type" : "application/x-www-form-urlencoded" }
-      
+
       return params
     else:
       params['success'] = False
       return params
-   
+
   def setupParsingErrorResponse(self, method, params):
     result = {}
     result['status_code'] = 400
     result['headers'] = { 'Content-Type' : "text/plain" }
     result['content'] = "Request must include hub, topic, callback, mode and verify url query string parameters and optionally lease_seconds, secret, verify_token url query parameters."
     return result
-    
+
 class PSHBPingHandler(BaseHandler):
   def setupRequest(self, method):
     qs = self.request.query_string
     parsedQs = cgi.parse_qs(qs)
-    
+
     params = {}
-    
+
     if parsedQs.has_key('hub') and parsedQs.has_key('topic'):
       params['success'] = True
       params['url'] = urllib.unquote(parsedQs['hub'][0])
@@ -160,15 +159,15 @@ class PSHBPingHandler(BaseHandler):
     else:
       params['success'] = False
       return params
-   
+
   def setupParsingErrorResponse(self, method, params):
     result = {}
     result['status_code'] = 400
     result['headers'] = { 'Content-Type' : "text/plain" }
     result['content'] = "Request must include hub and topic url query string parameters"
     return result
-  
-class RedirectToGithubHandler(webapp.RequestHandler):
+
+class RedirectToGithubHandler(webapp2.RequestHandler):
   def get(self):
     self.redirect('http://github.com/izuzak/urlreq')
 
@@ -176,9 +175,9 @@ class PSHBAppenginePingHandler(BaseHandler):
   def setupRequest(self, method):
     qs = self.request.query_string
     parsedQs = cgi.parse_qs(qs)
-    
+
     params = {}
-    
+
     params['success'] = True
     params['url'] = 'http://pubsubhubbub.appspot.com/'
     params['method'] = "POST"
@@ -186,14 +185,14 @@ class PSHBAppenginePingHandler(BaseHandler):
     params['headers'] = { "Content-Type" : "application/x-www-form-urlencoded" }
     return params
 
-application = webapp.WSGIApplication([('/req.*', UrlReqHandler),
+app = webapp2.WSGIApplication([('/req.*', UrlReqHandler),
                                       ('/pshbpinggae.*', PSHBAppenginePingHandler),
                                       ('/pshbping.*', PSHBPingHandler),
                                       ('/pshbsub.*', PSHBSubHandler),
                                       ('/.*', RedirectToGithubHandler)], debug=True)
 
-def main():
+"""def main():
   run_wsgi_app(application)
 
 if __name__ == "__main__":
-  main()
+  main()"""
