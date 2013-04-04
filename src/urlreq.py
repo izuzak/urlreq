@@ -190,9 +190,3 @@ app = webapp2.WSGIApplication([('/req.*', UrlReqHandler),
                                       ('/pshbping.*', PSHBPingHandler),
                                       ('/pshbsub.*', PSHBSubHandler),
                                       ('/.*', RedirectToGithubHandler)], debug=True)
-
-"""def main():
-  run_wsgi_app(application)
-
-if __name__ == "__main__":
-  main()"""
