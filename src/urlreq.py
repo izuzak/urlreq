@@ -1,6 +1,7 @@
 import webapp2
 import urllib
 import cgi
+import time
 
 from google.appengine.api import urlfetch
 from google.appengine.api.urlfetch import DownloadError
@@ -41,6 +42,15 @@ class BaseHandler(webapp2.RequestHandler):
   def processRequest(self, method):
     params = self.setupRequest(method)
     result = 1
+
+    parsedQs = cgi.parse_qs(self.request.query_string)
+
+    if parsedQs.has_key('delay'):
+      sleep_secs = int(parsedQs['delay'][0])
+      if 0 <= sleep_secs <= 30:
+        time.sleep(sleep_secs)
+      else:
+        raise ValueError('Delay parameter value must be >= 0 and <= 30 seconds.')
 
     if (params['success']):
       result = urlfetch.fetch(params['url'], payload=params['body'], headers=params['headers'], method=params['method'], deadline=10)
