@@ -83,6 +83,7 @@ Instead of constructing URLs by hand, use the handy form below.
     var requestHeadersObject = {};
     for (var i=0; i<requestHeaders.length; i++) {
       var hdr = requestHeaders[i].split(":");
+      if (hdr.length !== 2) { continue; }
       requestHeadersObject[hdr[0].trim()] = hdr[1].trim();
     }
 
